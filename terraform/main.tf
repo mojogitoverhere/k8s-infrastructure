@@ -31,13 +31,27 @@ resource "aws_subnet" "public" {
   }
 }
 
-resource "aws_instance" "myServer" {
+resource "aws_instance" "controllers" {
   ami = "ami-2d39803a"
   instance_type = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_all_between_nodes.id}", "${aws_security_group.allow_home.id}"]
 
+  count = 3
+
   tags {
-    Name = "myServer"
+    Name = "controller-${count.index}"
+  }
+}
+
+resource "aws_instance" "workers" {
+  ami = "ami-2d39803a"
+  instance_type = "t2.micro"
+  vpc_security_group_ids = ["${aws_security_group.allow_all_between_nodes.id}", "${aws_security_group.allow_home.id}"]
+
+  count = 3
+
+  tags {
+    Name = "worker-${count.index}"
   }
 }
 

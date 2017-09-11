@@ -1,0 +1,1 @@
+Terraform / Ansible for automating the creation and setup of a Kubernetes cluster according to https://github.com/kelseyhightower/kubernetes-the-hard-way.

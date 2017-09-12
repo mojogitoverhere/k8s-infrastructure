@@ -122,7 +122,7 @@ resource "template_file" "worker_hosts" {
 
   vars {
     index = "${count.index}"
-    name  = "workers"
+    name  = "worker"
     ip    = "${aws_instance.workers.*.public_ip[count.index]}"
   }
 }

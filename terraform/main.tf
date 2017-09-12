@@ -2,11 +2,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable "sg_port" {
-  description = "Security group port"
-  default = 8080
-}
-
 variable "home_cidr" {  description = "Allow SSH from this CIDR"
   default = "0.0.0.0/0"
 }

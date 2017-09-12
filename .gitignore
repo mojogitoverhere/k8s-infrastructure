@@ -1,3 +1,11 @@
+# Mac OS files
+.DS_Store
+
+# Terraform state files
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
+
+# Ansible state files
+inventory
+*.retry

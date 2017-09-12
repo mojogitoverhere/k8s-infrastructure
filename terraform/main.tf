@@ -3,15 +3,26 @@ provider "aws" {
 }
 
 variable "sg_port" {
-  type = "string"
   description = "Security group port"
   default = 8080
 }
 
-variable "home_cidr" {
-  type = "string"
-  description = "Allow SSH from this CIDR"
+variable "home_cidr" {  description = "Allow SSH from this CIDR"
   default = "0.0.0.0/0"
+}
+variable "key_name" {
+  description = "Name of key used to access the nodes"
+  default = "k8s"
+}
+
+variable "num_controllers" {
+  description = "The number of controller nodes you want to deploy"
+  default = "3"
+}
+
+variable "num_workers" {
+  description = "The number of worker nodes you want to deploy"
+  default = "3"
 }
 
 resource "aws_vpc" "k8s" {
@@ -35,8 +46,9 @@ resource "aws_instance" "controllers" {
   ami = "ami-2d39803a"
   instance_type = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_all_between_nodes.id}", "${aws_security_group.allow_home.id}"]
+  key_name = "${var.key_name}"
 
-  count = 3
+  count = "${var.num_controllers}"
 
   tags {
     Name = "controller-${count.index}"
@@ -47,8 +59,9 @@ resource "aws_instance" "workers" {
   ami = "ami-2d39803a"
   instance_type = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_all_between_nodes.id}", "${aws_security_group.allow_home.id}"]
+  key_name = "${var.key_name}"
 
-  count = 3
+  count = "${var.num_workers}"
 
   tags {
     Name = "worker-${count.index}"
@@ -94,8 +107,35 @@ resource "aws_security_group" "allow_all_between_nodes" {
   }
 }
 
-resource "null_resource" "inventory" {
-  provisioner "local-exec" {
-    command = "echo 'hello' > test.txt"
+resource "template_file" "controller_hosts" {
+  count = "${var.num_controllers}"
+  template = "${file("${path.module}/hosts.tpl")}"
+  vars {
+    index = "${count.index}"
+    name  = "controller"
+    ip = "${aws_instance.controllers.*.public_ip[count.index]}"
   }
+}
+
+resource "template_file" "worker_hosts" {
+  count = "${var.num_workers}"
+  template = "${file("${path.module}/hosts.tpl")}"
+  vars {
+    index = "${count.index}"
+    name  = "workers"
+    ip = "${aws_instance.workers.*.public_ip[count.index]}"
+
+  }
+}
+
+resource "template_file" "inventory" {
+  template = "${file("${path.module}/inventory.tpl")}"
+  vars {
+    controller_hosts = "${join("\n", template_file.controller_hosts.*.rendered)}"
+    worker_hosts = "${join("\n", template_file.worker_hosts.*.rendered)}"
+  }
+}
+
+output "inventory" {
+  value = "${template_file.inventory.rendered}"
 }

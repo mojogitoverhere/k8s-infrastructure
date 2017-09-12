@@ -44,7 +44,7 @@
             -ca=ca.pem \
             -ca-key=ca-key.pem \
             -config=ca-config.json \
-            -hostname={{item}},{{hostvars[item]['ansible_ssh_host']}} \
+            -hostname={{item}},{{hostvars[item]['ansible_ssh_host']}},{{hostvars[item]['private_ip']}} \
             -profile=kubernetes \
             {{item}}-csr.json | cfssljson -bare {{item}}"
   args:

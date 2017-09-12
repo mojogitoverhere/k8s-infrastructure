@@ -113,6 +113,7 @@ data "template_file" "controller_hosts" {
     index = "${count.index}"
     name  = "controller"
     ip    = "${aws_instance.controllers.*.public_ip[count.index]}"
+    private_ip = "${aws_instance.controllers.*.private_ip[count.index]}"
   }
 }
 
@@ -124,6 +125,7 @@ data "template_file" "worker_hosts" {
     index = "${count.index}"
     name  = "worker"
     ip    = "${aws_instance.workers.*.public_ip[count.index]}"
+    private_ip = "${aws_instance.workers.*.private_ip[count.index]}"
   }
 }
 

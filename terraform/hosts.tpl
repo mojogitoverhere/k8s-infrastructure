@@ -1,1 +1,1 @@
-${name}-${index} ansible_ssh_host=${ip}
+${name}-${index} ansible_ssh_host=${ip} private_ip=${private_ip}

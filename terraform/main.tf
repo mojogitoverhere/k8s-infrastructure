@@ -105,7 +105,7 @@ resource "aws_security_group" "allow_all_between_nodes" {
   }
 }
 
-resource "template_file" "controller_hosts" {
+data "template_file" "controller_hosts" {
   count    = "${var.num_controllers}"
   template = "${file("${path.module}/hosts.tpl")}"
 
@@ -116,7 +116,7 @@ resource "template_file" "controller_hosts" {
   }
 }
 
-resource "template_file" "worker_hosts" {
+data "template_file" "worker_hosts" {
   count    = "${var.num_workers}"
   template = "${file("${path.module}/hosts.tpl")}"
 
@@ -127,15 +127,15 @@ resource "template_file" "worker_hosts" {
   }
 }
 
-resource "template_file" "inventory" {
+data "template_file" "inventory" {
   template = "${file("${path.module}/inventory.tpl")}"
 
   vars {
-    controller_hosts = "${join("\n", template_file.controller_hosts.*.rendered)}"
-    worker_hosts     = "${join("\n", template_file.worker_hosts.*.rendered)}"
+    controller_hosts = "${join("\n", data.template_file.controller_hosts.*.rendered)}"
+    worker_hosts     = "${join("\n", data.template_file.worker_hosts.*.rendered)}"
   }
 }
 
 output "inventory" {
-  value = "${template_file.inventory.rendered}"
+  value = "${data.template_file.inventory.rendered}"
 }

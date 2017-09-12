@@ -16,21 +16,25 @@
     - "ca-config.json"
     - "ca-csr.json"
     - "admin-csr.json"
+    - "kube-proxy-csr.json"
 
 - name: Generate the CA certificate and private key
   shell: "cfssl gencert -config ca-config.json -initca ca-csr.json | cfssljson -bare ca"
   args:
     chdir: "/tmp"
 
-- name: Generate the client certificate and private key for the admin
+- name: Generate the client certificate and private key for the admin and kube-proxy
   shell: "cfssl gencert \
             -ca=ca.pem \
             -ca-key=ca-key.pem \
             -config=ca-config.json \
             -profile=kubernetes \
-            admin-csr.json | cfssljson -bare admin"
+            {{item}}-csr.json | cfssljson -bare {{item}}"
   args:
     chdir: "/tmp"
+  with_items:
+    - "admin"
+    - "kube-proxy"
 
 - name: Template the needed json config files
   template:

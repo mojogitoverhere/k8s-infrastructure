@@ -1,0 +1,51 @@
+---
+- name: Download cfssl tools
+  get_url:
+    url: "{{item.url}}"
+    dest: "/usr/local/bin/{{item.dest}}"
+    mode: "u+x"
+  with_items:
+    - { url: "https://pkg.cfssl.org/R1.2/cfssl_darwin-amd64", dest: "cfssl" }
+    - { url: "https://pkg.cfssl.org/R1.2/cfssljson_darwin-amd64", dest: "cfssljson" }
+
+- name: Copy the needed json config files
+  copy:
+    src: "{{item}}"
+    dest: "/tmp/"
+  with_items:
+    - "ca-config.json"
+    - "ca-csr.json"
+    - "admin-csr.json"
+
+- name: Generate the CA certificate and private key
+  shell: "cfssl gencert -config ca-config.json -initca ca-csr.json | cfssljson -bare ca"
+  args:
+    chdir: "/tmp"
+
+- name: Generate the client certificate and private key for the admin
+  shell: "cfssl gencert \
+            -ca=ca.pem \
+            -ca-key=ca-key.pem \
+            -config=ca-config.json \
+            -profile=kubernetes \
+            admin-csr.json | cfssljson -bare admin"
+  args:
+    chdir: "/tmp"
+
+- name: Template the needed json config files
+  template:
+    src: "node-csr.json.j2"
+    dest: "/tmp/{{item}}-csr.json"
+  with_items: "{{groups['workers']}}"
+
+# - name: Generate the client certificate and private key for the worker nodes
+#   shell: "cfssl gencert \
+#             -ca=ca.pem \
+#             -ca-key=ca-key.pem \
+#             -config=ca-config.json \
+#             -hostname=${instance},${EXTERNAL_IP},${INTERNAL_IP} \
+#             -profile=kubernetes \
+#             ${instance}-csr.json | cfssljson -bare ${instance}"
+#   args:
+#     chdir: "/tmp"
+#   with_items: "{{groups['workers']}}"

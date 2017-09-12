@@ -1,0 +1,6 @@
+---
+- name: Local setup
+  hosts: localhost
+  connection: local
+  roles:
+    - certs
